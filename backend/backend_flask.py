@@ -196,5 +196,34 @@ def ai_extract():
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 400
 
+# === Static frontend serving (added) ===
+FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")
+DEFAULT_INDEX = "index ok.html"  # use o nome do seu arquivo atual
+
+@app.get("/")
+def serve_index():
+    try:
+        return send_from_directory(FRONTEND_DIR, DEFAULT_INDEX)
+    except Exception:
+        return jsonify({"ok": False, "error": "index not found"}), 404
+
+@app.get("/favicon.ico")
+def favicon():
+    p = os.path.join(FRONTEND_DIR, "favicon.ico")
+    if os.path.isfile(p):
+        return send_from_directory(FRONTEND_DIR, "favicon.ico")
+    return ("", 204)
+
+@app.get("/<path:asset>")
+def serve_asset(asset):
+    p = os.path.join(FRONTEND_DIR, asset)
+    if os.path.isfile(p):
+        directory = os.path.dirname(p)
+        filename = os.path.basename(p)
+        return send_from_directory(directory, filename)
+    return jsonify({"ok": False, "error": "Not Found"}), 404
+# === end static serving ===
+
+
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=8000, debug=True)
